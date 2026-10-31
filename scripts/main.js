@@ -414,7 +414,7 @@ class List {
     tools.className = "ssf-tools";
     tools.innerHTML = `
       <i class="ssf-arrow fa-solid" inert></i>
-      <button type="button" class="ssf-funnel unbutton always-interactive" data-tooltip="${t("OpenMenu")}"
+      <button type="button" class="ssf-funnel unbutton always-interactive"
               aria-label="${t("OpenMenu")}"><i class="fa-solid fa-caret-down" inert></i></button>`;
     el.append(tools);
 
@@ -429,7 +429,6 @@ class List {
 
     if ( clickToSort ) {
       el.classList.add("ssf-sortable");
-      el.dataset.tooltip = t("ClickToSort");
       el.addEventListener("click", event => {
         if ( event.target.closest(".ssf-funnel") ) return;
         event.preventDefault();
@@ -670,7 +669,7 @@ class Menu {
         b.type = "button";
         b.className = "ssf-mini-sort";
         b.dataset.column = column;
-        b.dataset.tooltip = t("ClickToSort");
+        b.ariaLabel = t("ClickToSort");
         b.innerHTML = '<i class="fa-solid fa-arrow-up-short-wide"></i>';
         b.addEventListener("click", () => this.list.cycleSort(column));
         h.append(b);
