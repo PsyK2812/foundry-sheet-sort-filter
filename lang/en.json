@@ -1,0 +1,21 @@
+{
+  "SSF.Blanks": "(Blanks)",
+  "SSF.OpenMenu": "Sort & filter",
+  "SSF.ClickToSort": "Click to sort (ascending → descending → off)",
+  "SSF.SortAZ": "Sort A → Z",
+  "SSF.SortZA": "Sort Z → A",
+  "SSF.SortSmallLarge": "Sort smallest → largest",
+  "SSF.SortLargeSmall": "Sort largest → smallest",
+  "SSF.NameContains": "Name contains",
+  "SSF.Type": "Type",
+  "SSF.Rarity": "Rarity",
+  "SSF.Between": "Between",
+  "SSF.Min": "min",
+  "SSF.Max": "max",
+  "SSF.Search": "Search…",
+  "SSF.SelectAll": "(Select all)",
+  "SSF.ClearColumn": "Clear filter",
+  "SSF.ClearAll": "Clear all",
+  "SSF.Settings.Remember.Name": "Remember sorting & filters",
+  "SSF.Settings.Remember.Hint": "Keep each sheet's sorting and filters after closing it or reloading (saved in this browser only). When off, they reset on reload."
+}

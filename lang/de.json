@@ -1,0 +1,21 @@
+{
+  "SSF.Blanks": "(Leere)",
+  "SSF.OpenMenu": "Sortieren & filtern",
+  "SSF.ClickToSort": "Klicken zum Sortieren (aufsteigend → absteigend → aus)",
+  "SSF.SortAZ": "Von A bis Z sortieren",
+  "SSF.SortZA": "Von Z bis A sortieren",
+  "SSF.SortSmallLarge": "Nach Größe sortieren (aufsteigend)",
+  "SSF.SortLargeSmall": "Nach Größe sortieren (absteigend)",
+  "SSF.NameContains": "Name enthält",
+  "SSF.Type": "Typ",
+  "SSF.Rarity": "Seltenheit",
+  "SSF.Between": "Zwischen",
+  "SSF.Min": "min",
+  "SSF.Max": "max",
+  "SSF.Search": "Suchen…",
+  "SSF.SelectAll": "(Alles auswählen)",
+  "SSF.ClearColumn": "Filter löschen",
+  "SSF.ClearAll": "Alle löschen",
+  "SSF.Settings.Remember.Name": "Sortierung & Filter merken",
+  "SSF.Settings.Remember.Hint": "Sortierung und Filter jedes Bogens nach dem Schließen oder Neuladen behalten (nur in diesem Browser gespeichert). Wenn aus, werden sie beim Neuladen zurückgesetzt."
+}
