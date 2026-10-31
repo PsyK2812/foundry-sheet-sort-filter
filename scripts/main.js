@@ -38,7 +38,7 @@ Hooks.once("init", () => {
 
   document.addEventListener("pointerdown", event => {
     if ( Menu.current && !Menu.current.element.contains(event.target)
-      && !event.target.closest?.(".ssf-funnel") ) Menu.close();
+      && !event.target.closest?.(".ssf-funnel, .ssf-dir-button") ) Menu.close();
   }, true);
   document.addEventListener("keydown", event => {
     if ( (event.key === "Escape") && Menu.current ) {
@@ -493,6 +493,20 @@ class List {
     });
   }
 
+  menuLayout(column) {
+    if ( column === "name" ) return {
+      sort: true, text: true, range: null,
+      lists: [
+        { column: "type", heading: t("Type"), sortable: true, hideSingle: true },
+        { column: "rarity", heading: t("Rarity"), sortable: true, hideSingle: true }
+      ]
+    };
+    return {
+      sort: true, text: false, range: this.isNumeric(column) ? column : null,
+      lists: [{ column }]
+    };
+  }
+
   isNumeric(column) {
     if ( NUMERIC_COLUMNS.has(column) ) return true;
     if ( READERS[column] ) return false;
@@ -520,9 +534,15 @@ class Menu {
     this.anchor = anchor;
   }
 
-  /** Columns edited by this menu: the name header also covers type and rarity. */
+  /** What this menu shows; provided by the list. */
+  get layout() {
+    return this.list.menuLayout(this.column);
+  }
+
+  /** Columns edited by this menu. */
   get columns() {
-    return this.column === "name" ? ["name", "type", "rarity"] : [this.column];
+    const l = this.layout;
+    return [l.text ? "name" : null, l.range, ...l.lists.map(x => x.column)].filter(c => c);
   }
 
   open() {
@@ -554,34 +574,39 @@ class Menu {
   render() {
     const el = this.element;
     el.replaceChildren();
+    const layout = this.layout;
     const sortColumn = this.column;
-    const numeric = this.list.isNumeric(sortColumn);
 
     // Sorting
-    const sortBox = document.createElement("div");
-    sortBox.className = "ssf-sort";
-    sortBox.innerHTML = `
-      <button type="button" data-dir="asc"><i class="fa-solid fa-arrow-up-short-wide"></i>
-        ${numeric ? t("SortSmallLarge") : t("SortAZ")}</button>
-      <button type="button" data-dir="desc"><i class="fa-solid fa-arrow-down-wide-short"></i>
-        ${numeric ? t("SortLargeSmall") : t("SortZA")}</button>`;
-    sortBox.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-      const { sort } = this.list.state;
-      const same = sort?.column === sortColumn && sort.dir === b.dataset.dir;
-      this.list.setSort(sortColumn, same ? null : b.dataset.dir);
-    }));
-    el.append(sortBox);
+    if ( layout.sort ) {
+      const numeric = this.list.isNumeric(sortColumn);
+      const sortBox = document.createElement("div");
+      sortBox.className = "ssf-sort";
+      sortBox.innerHTML = `
+        <button type="button" data-dir="asc"><i class="fa-solid fa-arrow-up-short-wide"></i>
+          ${numeric ? t("SortSmallLarge") : t("SortAZ")}</button>
+        <button type="button" data-dir="desc"><i class="fa-solid fa-arrow-down-wide-short"></i>
+          ${numeric ? t("SortLargeSmall") : t("SortZA")}</button>`;
+      sortBox.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+        const { sort } = this.list.state;
+        const same = sort?.column === sortColumn && sort.dir === b.dataset.dir;
+        this.list.setSort(sortColumn, same ? null : b.dataset.dir);
+      }));
+      el.append(sortBox);
+    }
 
-    if ( this.column === "name" ) {
-      el.append(this.#textFilter());
-      for ( const column of ["type", "rarity"] ) {
-        const values = this.list.distinctValues(column);
-        if ( values.length < 2 && !this.list.state.filters[column] ) continue;
-        el.append(this.#valueList(column, values, t(column === "type" ? "Type" : "Rarity"), { sortable: true }));
-      }
-    } else {
-      if ( numeric ) el.append(this.#rangeFilter());
-      el.append(this.#valueList(this.column, this.list.distinctValues(this.column)));
+    if ( layout.text ) el.append(this.#textFilter());
+    if ( layout.range ) el.append(this.#rangeFilter(layout.range, layout.rangeHeading, layout.rangeSortable));
+    for ( const { column, heading, sortable, hideSingle } of layout.lists ) {
+      const values = this.list.distinctValues(column);
+      if ( hideSingle && (values.length < 2) && !this.list.state.filters[column] ) continue;
+      el.append(this.#valueList(column, values, heading, { sortable }));
+    }
+    if ( layout.empty && !el.childElementCount ) {
+      const p = document.createElement("p");
+      p.className = "ssf-empty";
+      p.textContent = layout.empty;
+      el.append(p);
     }
 
     // Footer
@@ -633,27 +658,39 @@ class Menu {
     return box;
   }
 
-  #rangeFilter() {
+  #rangeFilter(column, heading, sortable) {
     const box = document.createElement("div");
     box.className = "ssf-range";
-    const f = this.list.state.filters[this.column] ?? {};
-    const unit = this.column === "price" ? ` (${CONFIG.DND5E.currencies.gp?.abbreviation ?? "gp"})` : "";
+    const f = this.list.state.filters[column] ?? {};
+    const unit = column === "price" ? ` (${CONFIG.DND5E.currencies.gp?.abbreviation ?? "gp"})` : "";
     box.innerHTML = `
-      <span>${t("Between")}${unit}</span>
+      <span class="ssf-heading"><span>${heading ?? t("Between")}${unit}</span></span>
       <input type="number" step="any" data-bound="min" placeholder="${t("Min")}" value="${f.min ?? ""}">
       <span>–</span>
       <input type="number" step="any" data-bound="max" placeholder="${t("Max")}" value="${f.max ?? ""}">`;
     const apply = foundry.utils.debounce(() => {
-      const next = foundry.utils.deepClone(this.list.state.filters[this.column] ?? {});
+      const next = foundry.utils.deepClone(this.list.state.filters[column] ?? {});
       for ( const input of box.querySelectorAll("input") ) {
         const v = input.value === "" ? null : Number(input.value);
         next[input.dataset.bound] = Number.isFinite(v) ? v : null;
       }
-      this.list.setFilter(this.column, next);
+      this.list.setFilter(column, next);
       this.#refreshLists();
     }, 300);
     box.querySelectorAll("input").forEach(i => i.addEventListener("input", apply));
+    if ( sortable ) box.querySelector(".ssf-heading").append(this.#miniSort(column));
     return box;
+  }
+
+  #miniSort(column) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "ssf-mini-sort";
+    b.dataset.column = column;
+    b.ariaLabel = t("ClickToSort");
+    b.innerHTML = '<i class="fa-solid fa-arrow-up-short-wide"></i>';
+    b.addEventListener("click", () => this.list.cycleSort(column));
+    return b;
   }
 
   #valueList(column, values, heading, { sortable=false }={}) {
@@ -664,16 +701,7 @@ class Menu {
       const h = document.createElement("div");
       h.className = "ssf-heading";
       h.innerHTML = `<span>${heading}</span>`;
-      if ( sortable ) {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "ssf-mini-sort";
-        b.dataset.column = column;
-        b.ariaLabel = t("ClickToSort");
-        b.innerHTML = '<i class="fa-solid fa-arrow-up-short-wide"></i>';
-        b.addEventListener("click", () => this.list.cycleSort(column));
-        h.append(b);
-      }
+      if ( sortable ) h.append(this.#miniSort(column));
       box.append(h);
     }
 
@@ -749,8 +777,9 @@ class Menu {
         const keep = new Map(Array.from(ul.querySelectorAll("li[data-key]"))
           .map(li => [li.dataset.key, { key: li.dataset.key, label: li.dataset.label, count: 0 }]));
         for ( const v of values ) keep.set(v.key, v);
-        values = Array.from(ul.querySelectorAll("li[data-key]")).map(li => keep.get(li.dataset.key))
-          .concat(values.filter(v => !ul.querySelector(`li[data-key="${CSS.escape(v.key)}"]`)));
+        const shown = Array.from(ul.querySelectorAll("li[data-key]")).map(li => li.dataset.key);
+        const shownSet = new Set(shown);
+        values = shown.map(k => keep.get(k)).concat(values.filter(v => !shownSet.has(v.key)));
       }
       this.#fillList(fresh, column, values);
       if ( search?.value ) search.dispatchEvent(new Event("input"));
@@ -766,3 +795,272 @@ Hooks.once("ready", () => {
     resetAll: () => game.settings.set(MODULE_ID, "state", {})
   };
 });
+
+/* -------------------------------------------- */
+/*  Items sidebar & compendium windows          */
+/* -------------------------------------------- */
+
+/** Extra fields compendium indexes need for these filters. */
+const INDEX_FIELDS = ["system.rarities", "system.rarity", "system.price", "system.identified", "system.type"];
+
+/** Readers that work on an Item document or a compendium index entry. */
+const DATA_READERS = {
+  name: data => cell(data?.name || null),
+
+  type: data => {
+    if ( !data?.type ) return cell(null);
+    const key = CONFIG.Item.typeLabels?.[data.type];
+    return cell(key ? game.i18n.localize(key) : data.type);
+  },
+
+  rarity: data => {
+    if ( concealed(data) ) return cell(null);
+    const raw = data?.system?.rarities;
+    let keys = raw ? Array.from(raw).filter(r => r) : [];
+    if ( !keys.length && data?.system?.rarity ) keys = [data.system.rarity];
+    if ( !keys.length ) return cell(null);
+    const order = Object.keys(CONFIG.DND5E.itemRarity);
+    const labels = keys.map(k => CONFIG.DND5E.itemRarity[k] ?? k);
+    const rank = Math.min(...keys.map(k => order.indexOf(k)).filter(i => i >= 0));
+    return { sort: Number.isFinite(rank) ? rank : labels[0], label: labels.join(" / "), keys: labels };
+  },
+
+  price: data => {
+    const price = data?.system?.price;
+    if ( !price?.value || concealed(data) ) return cell(null);
+    const denom = price.denomination ?? "gp";
+    const conversion = CONFIG.DND5E.currencies[denom]?.conversion || 1;
+    const abbr = CONFIG.DND5E.currencies[denom]?.abbreviation ?? denom;
+    return cell(price.value / conversion, `${fmt(price.value)} ${abbr}`);
+  }
+};
+
+class DirectoryList {
+  /** @type {WeakMap<object, DirectoryList>} */
+  static #instances = new WeakMap();
+
+  static for(app) {
+    if ( app.documentName !== "Item" && app.collection?.documentName !== "Item" ) return null;
+    let list = this.#instances.get(app);
+    if ( !list ) this.#instances.set(app, list = new DirectoryList(app));
+    return list;
+  }
+
+  constructor(app) {
+    this.app = app;
+  }
+
+  /** The compendium pack, if this is a compendium window. */
+  get pack() {
+    const c = this.app.collection;
+    return (c && typeof c.getIndex === "function" && c.metadata) ? c : null;
+  }
+
+  get key() {
+    return this.pack ? `dir::${this.pack.collection}` : "dir::world-items";
+  }
+
+  get state() { return Store.get(this.key); }
+
+  set state(value) { Store.set(this.key, value); }
+
+  get root() { return this.app.element; }
+
+  get rows() {
+    return Array.from(this.root?.querySelectorAll("li[data-entry-id]") ?? []);
+  }
+
+  getData(row) {
+    const id = row.dataset.entryId;
+    if ( this.pack ) return this.pack.index.get(id) ?? null;
+    return this.app.collection?.get?.(id) ?? game.items?.get(id) ?? null;
+  }
+
+  read(row, column) {
+    return safe(() => DATA_READERS[column]?.(this.getData(row))) ?? cell(null);
+  }
+
+  /** Make sure the compendium index has the fields we read. */
+  async ensureIndex() {
+    const pack = this.pack;
+    if ( !pack || pack._ssfIndexed ) return;
+    await pack.getIndex({ fields: INDEX_FIELDS });
+    pack._ssfIndexed = true;
+  }
+
+  /* -------------------------------------------- */
+
+  /** Called on every render of the window. */
+  async onRender() {
+    this.injectButton();
+    const { sort, filters } = this.state;
+    if ( !sort && foundry.utils.isEmpty(filters) ) return this.updateButton();
+    await this.ensureIndex();
+    this.apply();
+  }
+
+  apply() {
+    const { filters } = this.state;
+    const active = !foundry.utils.isEmpty(filters);
+    for ( const row of this.rows ) {
+      row.classList.toggle("ssf-hidden", active && !List.prototype.passes.call(this, row, filters));
+    }
+    this.#updateFolders(active);
+    this.#sort();
+    this.updateButton();
+  }
+
+  #updateFolders(active) {
+    const folders = Array.from(this.root?.querySelectorAll("li.folder, li[data-folder-id]") ?? []);
+    // Deepest folders first, so a parent sees its children's state.
+    folders.reverse();
+    for ( const folder of folders ) {
+      if ( !active ) {
+        folder.classList.remove("ssf-hidden");
+        if ( folder.dataset.ssfOpened ) {
+          folder.classList.remove("expanded");
+          delete folder.dataset.ssfOpened;
+        }
+        continue;
+      }
+      const match = folder.querySelector("li[data-entry-id]:not(.ssf-hidden)");
+      folder.classList.toggle("ssf-hidden", !match);
+      if ( match && !folder.classList.contains("expanded") ) {
+        folder.classList.add("expanded");
+        folder.dataset.ssfOpened = "1";
+      }
+    }
+  }
+
+  #sort() {
+    const { sort } = this.state;
+    if ( !sort?.column ) return;
+    const dir = sort.dir === "desc" ? -1 : 1;
+    const collator = new Intl.Collator(game.i18n.lang, { numeric: true, sensitivity: "base" });
+    const lists = new Set(this.rows.map(r => r.parentElement));
+    for ( const ol of lists ) {
+      const rows = Array.from(ol.querySelectorAll(":scope > li[data-entry-id]"));
+      const keyed = rows.map((row, index) => ({ row, index, value: this.read(row, sort.column).sort }));
+      keyed.sort((a, b) => {
+        const av = a.value, bv = b.value;
+        if ( av === null && bv === null ) return a.index - b.index;
+        if ( av === null ) return 1;
+        if ( bv === null ) return -1;
+        const c = (typeof av === "number" && typeof bv === "number") ? av - bv : collator.compare(String(av), String(bv));
+        return (c * dir) || (a.index - b.index);
+      });
+      for ( const { row } of keyed ) ol.append(row);
+    }
+  }
+
+  /* -------------------------------------------- */
+
+  setSort(column, dir) {
+    const state = this.state;
+    const had = state.sort;
+    state.sort = dir && column ? { column, dir } : null;
+    this.state = state;
+    // Turning sorting off: let Foundry redraw in its own order.
+    if ( had && !state.sort ) this.app.render();
+    else this.apply();
+    Menu.current?.list === this && Menu.current.syncSort();
+  }
+
+  cycleSort(column) {
+    const { sort } = this.state;
+    let dir = "asc";
+    if ( sort?.column === column ) dir = sort.dir === "asc" ? "desc" : null;
+    this.setSort(column, dir);
+  }
+
+  setFilter(column, filter) {
+    const state = this.state;
+    const empty = !filter || (!filter.excluded?.length && !filter.text
+      && (filter.min ?? null) === null && (filter.max ?? null) === null);
+    if ( empty ) delete state.filters[column];
+    else state.filters[column] = filter;
+    this.state = state;
+    this.apply();
+  }
+
+  clearFilters() {
+    const state = this.state;
+    state.filters = {};
+    this.state = state;
+    this.apply();
+  }
+
+  passes(row, filters, except) {
+    return List.prototype.passes.call(this, row, filters, except);
+  }
+
+  distinctValues(column) {
+    return List.prototype.distinctValues.call(this, column);
+  }
+
+  isNumeric(column) {
+    return column === "price";
+  }
+
+  menuLayout() {
+    return {
+      sort: false, text: false,
+      range: "price", rangeHeading: t("Price"), rangeSortable: true,
+      lists: [
+        { column: "rarity", heading: t("Rarity"), sortable: true },
+        { column: "type", heading: t("Type"), sortable: true, hideSingle: true }
+      ]
+    };
+  }
+
+  /* -------------------------------------------- */
+
+  injectButton() {
+    const root = this.root;
+    if ( !root || root.querySelector(".ssf-dir-button") ) return;
+    const search = root.querySelector("search, .header-search, .directory-header");
+    const input = search?.querySelector('input[type="search"], input[name="search"]');
+    const sortButton = root.querySelector('[data-action="toggleSort"], .toggle-sort');
+    const button = document.createElement("button");
+    button.type = "button";
+    // Look like Foundry's own sort button (copy its classes, swap the icon).
+    const isIcon = c => /^fa-/.test(c) && !["fa-solid", "fa-regular", "fa-fw"].includes(c);
+    const base = sortButton ? Array.from(sortButton.classList).filter(c => !isIcon(c) && c !== "active") : ["inline-control", "icon", "fa-solid"];
+    const childIcon = sortButton?.querySelector(":scope > i");
+    button.className = ["ssf-dir-button", ...base].join(" ");
+    if ( childIcon ) button.innerHTML = '<i class="fa-solid fa-filter" inert></i>';
+    else button.classList.add("fa-solid", "fa-filter");
+    button.ariaLabel = t("FilterItems");
+    button.addEventListener("pointerdown", event => event.stopPropagation());
+    button.addEventListener("click", async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if ( Menu.current?.anchor === button ) return Menu.close();
+      await this.ensureIndex();
+      new Menu(this, "directory", button).open();
+    });
+    if ( sortButton?.parentElement ) sortButton.before(button);
+    else if ( input ) input.after(button);
+    else if ( search ) search.append(button);
+    else return;
+  }
+
+  updateButton() {
+    const button = this.root?.querySelector(".ssf-dir-button");
+    if ( !button ) return;
+    const { sort, filters } = this.state;
+    button.classList.toggle("ssf-active", !foundry.utils.isEmpty(filters) || Boolean(sort));
+  }
+}
+
+/* The read-only helpers above (passes, distinctValues) reach these through `this`. */
+Object.defineProperty(DirectoryList.prototype, "getItem", { value: function(row) { return this.getData(row); } });
+
+function onDirectoryRender(app) {
+  safe(() => {
+    const list = DirectoryList.for(app);
+    list?.onRender().catch(err => console.error(`${MODULE_ID} |`, err));
+  });
+}
+Hooks.on("renderItemDirectory", onDirectoryRender);
+Hooks.on("renderCompendium", onDirectoryRender);

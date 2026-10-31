@@ -4,7 +4,7 @@ Install in Foundry: Add-on Modules → Install Module → paste this Manifest UR
 
     https://github.com/PsyK2812/foundry-sheet-sort-filter/releases/latest/download/module.json
 
-Excel-style sorting and filtering for the dnd5e character sheet. Works on every item list that uses the dnd5e inventory, including Inventory, Features, Spells and container sheets.
+Excel-style sorting and filtering for dnd5e. It works on the character sheet (Inventory, Features, Spells, containers), the **Items sidebar** and **Item compendiums**.
 
 Requires Foundry VTT v14 and dnd5e 6.x (tested against 6.0.6).
 
@@ -19,6 +19,14 @@ Requires Foundry VTT v14 and dnd5e 6.x (tested against 6.0.6).
 - dnd5e's own search box and filters still work alongside this module. Its **✕ (clear)** button also clears this module's filters.
 
 A sorted column shows an arrow, and a filtered column shows a gold funnel.
+
+### Items sidebar & compendiums
+A **funnel button** next to the sort button opens a menu with:
+- **Rarity** and **Type** checkbox lists
+- a **Price** min – max range in gp
+- sort buttons for each of these (sorting happens inside each folder)
+
+Folders with no matches are hidden, and folders that contain matches open automatically. Clear the filters and they close again. The funnel turns gold while a filter or sort is active. Each compendium and the Items sidebar keep their own settings.
 
 ## Notes
 - Sorting and filtering only change the view. Items keep their manual order, and switching sorting off brings that order back.

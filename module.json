@@ -1,8 +1,8 @@
 {
   "id": "sheet-sort-filter",
   "title": "Sheet Sort & Filter",
-  "description": "Excel-style sorting and filtering for dnd5e character sheets: click a column header (Price, Weight, Quantity, Charges…) to sort, or open its dropdown to tick values on and off, set a min/max range, or filter by name, type and rarity.",
-  "version": "1.0.1",
+  "description": "Excel-style sorting and filtering for dnd5e character sheets, the Items sidebar and Item compendiums (rarity, type, price): click a column header (Price, Weight, Quantity, Charges…) to sort, or open its dropdown to tick values on and off, set a min/max range, or filter by name, type and rarity.",
+  "version": "1.1.0",
   "authors": [{ "name": "PsyK2812", "url": "https://github.com/PsyK2812" }],
   "compatibility": { "minimum": "14", "verified": "14" },
   "relationships": {
@@ -20,5 +20,5 @@
   ],
   "url": "https://github.com/PsyK2812/foundry-sheet-sort-filter",
   "manifest": "https://github.com/PsyK2812/foundry-sheet-sort-filter/releases/latest/download/module.json",
-  "download": "https://github.com/PsyK2812/foundry-sheet-sort-filter/releases/download/v1.0.1/module.zip"
+  "download": "https://github.com/PsyK2812/foundry-sheet-sort-filter/releases/download/v1.1.0/module.zip"
 }

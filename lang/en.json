@@ -17,5 +17,7 @@
   "SSF.ClearColumn": "Clear filter",
   "SSF.ClearAll": "Clear all",
   "SSF.Settings.Remember.Name": "Remember sorting & filters",
-  "SSF.Settings.Remember.Hint": "Keep each sheet's sorting and filters after closing it or reloading (saved in this browser only). When off, they reset on reload."
+  "SSF.Settings.Remember.Hint": "Keep each sheet's sorting and filters after closing it or reloading (saved in this browser only). When off, they reset on reload.",
+  "SSF.Price": "Price",
+  "SSF.FilterItems": "Filter & sort items"
 }

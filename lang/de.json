@@ -17,5 +17,7 @@
   "SSF.ClearColumn": "Filter löschen",
   "SSF.ClearAll": "Alle löschen",
   "SSF.Settings.Remember.Name": "Sortierung & Filter merken",
-  "SSF.Settings.Remember.Hint": "Sortierung und Filter jedes Bogens nach dem Schließen oder Neuladen behalten (nur in diesem Browser gespeichert). Wenn aus, werden sie beim Neuladen zurückgesetzt."
+  "SSF.Settings.Remember.Hint": "Sortierung und Filter jedes Bogens nach dem Schließen oder Neuladen behalten (nur in diesem Browser gespeichert). Wenn aus, werden sie beim Neuladen zurückgesetzt.",
+  "SSF.Price": "Preis",
+  "SSF.FilterItems": "Gegenstände filtern & sortieren"
 }
