@@ -397,7 +397,7 @@ class List {
 
       // Name column (the section title cell).
       const title = header.querySelector(".item-name");
-      if ( title ) this.#decorate(title, "name", { clickToSort: false });
+      if ( title ) this.#decorate(title, "name", { clickToSort: true });
 
       for ( const col of header.querySelectorAll("[data-column-id]") ) {
         const id = col.dataset.columnId;

@@ -9,7 +9,7 @@ Excel-style sorting and filtering for dnd5e. It works on the character sheet (In
 Requires Foundry VTT v14 and dnd5e 6.x (tested against 6.0.6).
 
 ## Use
-- **Click a column header** (Price, Weight, Quantity, Charges, Uses, Range…) to sort: ascending → descending → back to normal order.
+- **Click a column header** (the section title for Name, or Price, Weight, Quantity, Charges, Uses, Range…) to sort: ascending → descending → back to normal order.
 - **Click the small ▾ on a header** to open its menu:
   - sort ascending / descending
   - tick values on and off, like Excel's AutoFilter (with *(Select all)*, a search box for long lists and *(Blanks)*)
